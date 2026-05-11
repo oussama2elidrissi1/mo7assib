@@ -5,6 +5,10 @@ from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.services.project_service import get_project
 
 
+def get_all_employees(db: Session, skip: int = 0, limit: int = 200) -> list[Employee]:
+    return db.query(Employee).offset(skip).limit(limit).all()
+
+
 def get_employees(db: Session, project_id: int) -> list[Employee]:
     get_project(db, project_id)
     return db.query(Employee).filter(Employee.project_id == project_id).all()

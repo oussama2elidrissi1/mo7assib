@@ -14,6 +14,7 @@ class ExpenseCreate(BaseModel):
     payment_method: PaymentMethod = PaymentMethod.cash
     supplier_name: Optional[str] = None
     receipt_file_url: Optional[str] = None
+    is_validated: bool = False
     notes: Optional[str] = None
 
 
@@ -25,6 +26,7 @@ class ExpenseUpdate(BaseModel):
     payment_method: Optional[PaymentMethod] = None
     supplier_name: Optional[str] = None
     receipt_file_url: Optional[str] = None
+    is_validated: Optional[bool] = None
     notes: Optional[str] = None
 
 
@@ -38,6 +40,8 @@ class ExpenseResponse(BaseModel):
     payment_method: PaymentMethod
     supplier_name: Optional[str]
     receipt_file_url: Optional[str]
+    is_validated: bool
+    validated_by: Optional[int]
     notes: Optional[str]
     created_at: datetime
     updated_at: datetime

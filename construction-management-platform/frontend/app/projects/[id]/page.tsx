@@ -1,258 +1,469 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import AppShell from "@/components/layout/AppShell";
-import { Card } from "@/components/ui/Card";
-import { Badge, statusVariant } from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
-import ProgressBar from "@/components/ui/ProgressBar";
-import api from "@/lib/api";
-import type {
-  Project, ProjectLand, Building, Employee, Task, Resource,
-  Expense, Document, ProjectProgress, ProjectFinancialSummary,
-} from "@/lib/types";
 import {
-  PROJECT_STATUS_LABELS, EMPLOYEE_ROLE_LABELS, TASK_STATUS_LABELS,
-  TASK_CATEGORY_LABELS, EXPENSE_CATEGORY_LABELS,
-} from "@/lib/types";
-import Link from "next/link";
-import { Edit } from "lucide-react";
+  FileImage,
+  HardHat,
+  Landmark,
+  MapPinned,
+  ReceiptText,
+  ScrollText,
+} from "lucide-react";
 
-const TABS = [
-  "Informations générales", "Terrain", "Bâtiments", "Employés",
-  "Pointage", "Tâches", "Achats & Ressources", "Charges",
-  "Documents", "Résumé financier",
-];
+import AppShell from "@/components/layout/AppShell";
+import PageHeader from "@/components/ui/PageHeader";
+import ProjectTabs from "@/components/ui/ProjectTabs";
+import AlertCard from "@/components/ui/AlertCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+import ProgressBar from "@/components/ui/ProgressBar";
+import EmptyState from "@/components/ui/EmptyState";
+import { Card } from "@/components/ui/Card";
+import DataTable from "@/components/tables/DataTable";
+import api from "@/lib/api";
+import {
+  ASSIGNMENT_ROLE_LABELS,
+  ATTENDANCE_STATUS_LABELS,
+  CONTRACT_SCOPE_LABELS,
+  DELIVERY_STATUS_LABELS,
+  EXPENSE_CATEGORY_LABELS,
+  PAYMENT_STATUS_LABELS,
+  PHASE_STATUS_LABELS,
+  PROJECT_STATUS_LABELS,
+  RELATED_TYPE_LABELS,
+  Attendance,
+  Building,
+  DailySiteReport,
+  Expense,
+  MaterialDelivery,
+  ProjectAssignment,
+  ProjectDocument,
+  ProjectFinancialSummary,
+  ProjectLand,
+  ProjectOverview,
+  ProjectPhase,
+  ProjectSalarySummary,
+  formatDate,
+  formatMAD,
+  formatPercent,
+} from "@/lib/types";
+
+const tabs = ["نظرة عامة", "الأرض", "التخطيط والمراحل", "الفريق", "النقطة", "المصاريف", "الموارد", "الرواتب", "الوثائق", "التقارير"];
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [tab, setTab] = useState(0);
-  const [project, setProject] = useState<Project | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [overview, setOverview] = useState<ProjectOverview | null>(null);
   const [land, setLand] = useState<ProjectLand | null>(null);
-  const [buildings, setBuildings] = useState<Building[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [resources, setResources] = useState<Resource[]>([]);
+  const [phases, setPhases] = useState<ProjectPhase[]>([]);
+  const [team, setTeam] = useState<ProjectAssignment[]>([]);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [progress, setProgress] = useState<ProjectProgress | null>(null);
   const [financial, setFinancial] = useState<ProjectFinancialSummary | null>(null);
+  const [salarySummary, setSalarySummary] = useState<ProjectSalarySummary | null>(null);
+  const [documents, setDocuments] = useState<ProjectDocument[]>([]);
+  const [buildings, setBuildings] = useState<Building[]>([]);
+  const [dailyReport, setDailyReport] = useState<DailySiteReport | null>(null);
+  const [deliveries, setDeliveries] = useState<MaterialDelivery[]>([]);
 
   useEffect(() => {
     if (!id) return;
-    api.get(`/projects/${id}`).then((r) => setProject(r.data)).catch(() => {});
-    api.get(`/projects/${id}/land`).then((r) => setLand(r.data)).catch(() => {});
-    api.get(`/projects/${id}/buildings`).then((r) => setBuildings(r.data));
-    api.get(`/projects/${id}/employees`).then((r) => setEmployees(r.data));
-    api.get(`/projects/${id}/tasks`).then((r) => setTasks(r.data));
-    api.get(`/projects/${id}/resources`).then((r) => setResources(r.data));
-    api.get(`/projects/${id}/expenses`).then((r) => setExpenses(r.data));
-    api.get(`/projects/${id}/documents`).then((r) => setDocuments(r.data));
-    api.get(`/projects/${id}/progress`).then((r) => setProgress(r.data));
-    api.get(`/projects/${id}/financial-summary`).then((r) => setFinancial(r.data));
+    api.get(`/projects/${id}/overview`).then((res) => setOverview(res.data)).catch(() => {});
+    api.get(`/projects/${id}/land`).then((res) => setLand(res.data)).catch(() => setLand(null));
+    api.get(`/projects/${id}/phases`).then((res) => setPhases(res.data)).catch(() => {});
+    api.get(`/projects/${id}/team`).then((res) => setTeam(res.data)).catch(() => {});
+    api.get(`/attendance/project/${id}`).then((res) => setAttendance(res.data)).catch(() => {});
+    api.get(`/projects/${id}/expenses`).then((res) => setExpenses(res.data)).catch(() => {});
+    api.get(`/projects/${id}/financial-summary`).then((res) => setFinancial(res.data)).catch(() => {});
+    api.get(`/projects/${id}/salary-summary`).then((res) => setSalarySummary(res.data)).catch(() => {});
+    api.get(`/projects/${id}/documents-v2`).then((res) => setDocuments(res.data)).catch(() => {});
+    api.get(`/projects/${id}/buildings`).then((res) => setBuildings(res.data)).catch(() => {});
+    api.get(`/projects/${id}/daily-report`).then((res) => setDailyReport(res.data)).catch(() => {});
+    api.get(`/projects/${id}/material-deliveries`).then((res) => setDeliveries(res.data)).catch(() => {});
   }, [id]);
 
-  const fmt = (n?: number | string) =>
-    n != null ? new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(Number(n)) : "—";
+  const today = new Date().toISOString().slice(0, 10);
+  const todayAttendance = attendance.filter((item) => item.date === today);
 
-  if (!project) return <AppShell><div className="text-gray-400 mt-16 text-center">Chargement...</div></AppShell>;
+  if (!overview) {
+    return (
+      <AppShell>
+        <Card>
+          <p className="text-sm text-slate-500">جارٍ تحميل مركز قيادة الورش...</p>
+        </Card>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-          <p className="text-gray-500 text-sm">{project.location}</p>
-        </div>
-        <div className="flex gap-2">
-          <Badge label={PROJECT_STATUS_LABELS[project.status]} variant={statusVariant(project.status)} />
-          <Link href={`/projects/${id}/edit`}><Button variant="secondary" size="sm"><Edit size={14} className="mr-1" />Modifier</Button></Link>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="مركز قيادة المشروع"
+        title={overview.name}
+        description="هذه الصفحة هي مركز القرار ديال الورش: التقدم، الفريق، النقطة، المصاريف، الموارد، الرواتب والوثائق كلهم مجتمعين هنا."
+        actions={[
+          { href: "/attendance", label: "النقطة اليومية", variant: "secondary" },
+          { href: "/expenses", label: "إضافة مصروف", variant: "secondary" },
+          { href: "/documents", label: "إضافة وثيقة", variant: "secondary" },
+        ]}
+      />
 
-      {progress && (
-        <Card className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600">Avancement global</span>
-            <span className="text-sm font-bold text-primary-700">{progress.progress_percentage}%</span>
+      <div className="mb-6 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card className="overflow-hidden bg-primary-900 text-white">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-primary-200">{overview.city ?? overview.location}</p>
+              <h2 className="mt-2 text-3xl font-bold">{overview.name}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-primary-100">
+                {overview.description ?? "لا توجد ملاحظات إضافية على المشروع حاليا."}
+              </p>
+            </div>
+            <StatusBadge status={overview.status} label={PROJECT_STATUS_LABELS[overview.status]} />
           </div>
-          <ProgressBar value={progress.progress_percentage} />
-          <p className="text-xs text-gray-400 mt-1">{progress.completed_tasks} / {progress.total_tasks} tâches</p>
-        </Card>
-      )}
 
-      {/* Tab navigation */}
-      <div className="flex gap-1 flex-wrap mb-6 border-b border-gray-200">
-        {TABS.map((t, i) => (
-          <button key={i} onClick={() => setTab(i)}
-            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${tab === i ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
-            {t}
-          </button>
-        ))}
+          <div className="mt-6">
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="text-primary-200">التقدم العام</span>
+              <span className="font-semibold">{formatPercent(overview.taux_avancement)}</span>
+            </div>
+            <ProgressBar value={overview.taux_avancement} tone="yellow" />
+          </div>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl bg-white/10 p-4">
+              <p className="text-xs text-primary-200">الميزانية</p>
+              <p className="mt-2 font-bold">{formatMAD(overview.budget_prevu)}</p>
+            </div>
+            <div className="rounded-2xl bg-white/10 p-4">
+              <p className="text-xs text-primary-200">الكلفة</p>
+              <p className="mt-2 font-bold">{formatMAD(overview.cout_reel)}</p>
+            </div>
+            <div className="rounded-2xl bg-white/10 p-4">
+              <p className="text-xs text-primary-200">الهامش الحقيقي</p>
+              <p className="mt-2 font-bold">{formatMAD(overview.marge_reelle)}</p>
+            </div>
+            <div className="rounded-2xl bg-white/10 p-4">
+              <p className="text-xs text-primary-200">المرحلة القادمة</p>
+              <p className="mt-2 font-bold">{overview.prochaine_phase ?? "غير محددة"}</p>
+            </div>
+          </div>
+        </Card>
+
+        <div className="space-y-4">
+          {overview.alerts.length ? (
+            overview.alerts.slice(0, 3).map((alert) => <AlertCard key={`${alert.code}-${alert.title}`} alert={alert} />)
+          ) : (
+            <Card>
+              <p className="text-sm text-slate-500">ما كايناش تنبيهات حرجة دابا.</p>
+            </Card>
+          )}
+        </div>
       </div>
 
-      {/* Tab 0: Informations générales */}
-      {tab === 0 && (
-        <Card>
-          <dl className="grid grid-cols-2 gap-4 text-sm">
-            {([
-              ["Type client", project.client_type === "private" ? "Privé" : "Public"],
-              ["Type projet", project.project_type === "labor_only" ? "MO uniquement" : "MO + Matériaux"],
-              ["Prix convenu", fmt(project.agreed_price)],
-              ["Durée estimée", project.estimated_duration_days ? `${project.estimated_duration_days} jours` : "—"],
-              ["Date début", project.start_date || "—"],
-              ["Fin estimée", project.estimated_end_date || "—"],
-              ["Adresse", project.address || "—"],
-            ] as [string, string][]).map(([k, v]) => (
-              <div key={k}><dt className="text-gray-500">{k}</dt><dd className="font-medium">{v}</dd></div>
-            ))}
-          </dl>
-        </Card>
-      )}
+      <ProjectTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
-      {/* Tab 1: Terrain */}
-      {tab === 1 && (
-        <Card>
-          {land ? (
-            <dl className="grid grid-cols-2 gap-4 text-sm">
-              {([
-                ["Surface (m²)", land.surface_area_m2 ?? "—"],
-                ["Adresse terrain", land.land_address || "—"],
-                ["Nombre d'étages", land.floors_count ?? 0],
-                ["Sous-sol", land.has_basement ? "Oui" : "Non"],
-                ["Nombre de sous-sols", land.basement_count ?? 0],
-                ["Notes", land.notes || "—"],
-              ] as [string, string | number][]).map(([k, v]) => (
-                <div key={k}><dt className="text-gray-500">{k}</dt><dd className="font-medium">{v}</dd></div>
-              ))}
-            </dl>
-          ) : <p className="text-gray-400">Aucune information terrain saisie.</p>}
-        </Card>
-      )}
-
-      {/* Tab 2: Bâtiments */}
-      {tab === 2 && (
-        <Card>
-          {buildings.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead><tr className="text-left text-gray-500 border-b">{["Nom", "Surface (m²)", "Étages", "Appartements", "Notes"].map(h => <th key={h} className="pb-2 pr-4">{h}</th>)}</tr></thead>
-              <tbody>{buildings.map(b => <tr key={b.id} className="border-b last:border-0"><td className="py-2 pr-4">{b.name}</td><td className="pr-4">{b.surface_area_m2 ?? "—"}</td><td className="pr-4">{b.number_of_floors ?? 0}</td><td className="pr-4">{b.number_of_apartments ?? 0}</td><td>{b.notes || "—"}</td></tr>)}</tbody>
-            </table>
-          ) : <p className="text-gray-400">Aucun bâtiment saisi.</p>}
-        </Card>
-      )}
-
-      {/* Tab 3: Employés */}
-      {tab === 3 && (
-        <Card>
-          {employees.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead><tr className="text-left text-gray-500 border-b">{["Nom", "Rôle", "Téléphone", "Salaire/jour", "Statut"].map(h => <th key={h} className="pb-2 pr-4">{h}</th>)}</tr></thead>
-              <tbody>{employees.map(e => (
-                <tr key={e.id} className="border-b last:border-0">
-                  <td className="py-2 pr-4">{e.name}</td>
-                  <td className="pr-4">{EMPLOYEE_ROLE_LABELS[e.role]}</td>
-                  <td className="pr-4">{e.phone || "—"}</td>
-                  <td className="pr-4">{e.daily_salary ? fmt(Number(e.daily_salary)) : "—"}</td>
-                  <td><Badge label={e.is_active ? "Actif" : "Inactif"} variant={e.is_active ? "green" : "gray"} /></td>
-                </tr>
-              ))}</tbody>
-            </table>
-          ) : <p className="text-gray-400">Aucun employé sur ce chantier.</p>}
-        </Card>
-      )}
-
-      {/* Tab 5: Tâches */}
-      {tab === 5 && (
-        <Card>
-          {tasks.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead><tr className="text-left text-gray-500 border-b">{["Titre", "Catégorie", "Priorité", "Statut", "Fin prévue"].map(h => <th key={h} className="pb-2 pr-4">{h}</th>)}</tr></thead>
-              <tbody>{tasks.map(t => (
-                <tr key={t.id} className="border-b last:border-0">
-                  <td className="py-2 pr-4">{t.title}</td>
-                  <td className="pr-4">{TASK_CATEGORY_LABELS[t.category]}</td>
-                  <td className="pr-4">{t.priority}</td>
-                  <td className="pr-4"><Badge label={TASK_STATUS_LABELS[t.status]} variant={statusVariant(t.status)} /></td>
-                  <td>{t.end_date || "—"}</td>
-                </tr>
-              ))}</tbody>
-            </table>
-          ) : <p className="text-gray-400">Aucune tâche sur ce chantier.</p>}
-        </Card>
-      )}
-
-      {/* Tab 6: Ressources */}
-      {tab === 6 && (
-        <Card>
-          {resources.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead><tr className="text-left text-gray-500 border-b">{["Titre", "Type", "Fournisseur", "Montant", "Date"].map(h => <th key={h} className="pb-2 pr-4">{h}</th>)}</tr></thead>
-              <tbody>{resources.map(r => (
-                <tr key={r.id} className="border-b last:border-0">
-                  <td className="py-2 pr-4">{r.title}</td>
-                  <td className="pr-4">{r.type}</td>
-                  <td className="pr-4">{r.supplier_name || "—"}</td>
-                  <td className="pr-4">{fmt(r.amount)}</td>
-                  <td>{r.purchase_date || "—"}</td>
-                </tr>
-              ))}</tbody>
-            </table>
-          ) : <p className="text-gray-400">Aucune ressource.</p>}
-        </Card>
-      )}
-
-      {/* Tab 7: Charges */}
-      {tab === 7 && (
-        <Card>
-          {expenses.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead><tr className="text-left text-gray-500 border-b">{["Titre", "Catégorie", "Montant", "Date", "Mode paiement"].map(h => <th key={h} className="pb-2 pr-4">{h}</th>)}</tr></thead>
-              <tbody>{expenses.map(e => (
-                <tr key={e.id} className="border-b last:border-0">
-                  <td className="py-2 pr-4">{e.title}</td>
-                  <td className="pr-4">{EXPENSE_CATEGORY_LABELS[e.category]}</td>
-                  <td className="pr-4">{fmt(Number(e.amount))}</td>
-                  <td className="pr-4">{e.expense_date}</td>
-                  <td>{e.payment_method}</td>
-                </tr>
-              ))}</tbody>
-            </table>
-          ) : <p className="text-gray-400">Aucune charge enregistrée.</p>}
-        </Card>
-      )}
-
-      {/* Tab 8: Documents */}
-      {tab === 8 && (
-        <Card>
-          {documents.length > 0 ? (
-            <ul className="space-y-2">{documents.map(d => (
-              <li key={d.id} className="flex items-center gap-3 text-sm">
-                <span className="text-gray-500">{d.file_name}</span>
-                <a href={`${process.env.NEXT_PUBLIC_API_URL}${d.file_url}`} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline text-xs">Télécharger</a>
-              </li>
-            ))}</ul>
-          ) : <p className="text-gray-400">Aucun document.</p>}
-        </Card>
-      )}
-
-      {/* Tab 9: Résumé financier */}
-      {tab === 9 && financial && (
-        <div className="grid grid-cols-2 gap-4">
-          {([
-            ["Prix convenu", financial.agreed_price],
-            ["Charges manuelles", financial.manual_expenses],
-            ["Coût main d'œuvre", financial.labor_cost],
-            ["Total charges", financial.total_expenses],
-            ["Marge estimée", financial.estimated_margin],
-          ] as [string, number][]).map(([k, v]) => (
-            <Card key={k}>
-              <p className="text-sm text-gray-500">{k}</p>
-              <p className={`text-2xl font-bold mt-1 ${k === "Marge estimée" && v < 0 ? "text-red-600" : "text-gray-900"}`}>{fmt(v)}</p>
+      {activeTab === 0 ? (
+        <div className="space-y-5">
+          <div className="grid gap-5 xl:grid-cols-4">
+            <Card>
+              <p className="text-sm text-slate-500">الوضعية العامة</p>
+              <div className="mt-4 space-y-3 text-sm text-slate-700">
+                <div className="flex justify-between"><span>الثمن المتفق عليه</span><strong>{formatMAD(overview.agreed_price)}</strong></div>
+                <div className="flex justify-between"><span>رئيس الورش</span><strong>{overview.chef_chantier ?? "غير معين"}</strong></div>
+                <div className="flex justify-between"><span>مدير المشروع</span><strong>{overview.project_manager ?? "غير معين"}</strong></div>
+                <div className="flex justify-between"><span>تجاوز الميزانية</span><strong>{formatPercent(overview.taux_depassement_budget)}</strong></div>
+              </div>
             </Card>
-          ))}
+            <Card>
+              <p className="text-sm text-slate-500">الميزانية الأولية</p>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="flex justify-between"><span>اليد العاملة</span><strong>{formatMAD(overview.budget?.labor_budget)}</strong></div>
+                <div className="flex justify-between"><span>المواد</span><strong>{formatMAD(overview.budget?.materials_budget)}</strong></div>
+                <div className="flex justify-between"><span>المعدات</span><strong>{formatMAD(overview.budget?.equipment_budget)}</strong></div>
+                <div className="flex justify-between"><span>أخرى</span><strong>{formatMAD(overview.budget?.other_budget)}</strong></div>
+              </div>
+            </Card>
+            <Card>
+              <p className="text-sm text-slate-500">الموارد والتتبع</p>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="flex justify-between"><span>أعضاء الفريق</span><strong>{overview.team_count}</strong></div>
+                <div className="flex justify-between"><span>الحضور اليوم</span><strong>{overview.present_today_count}</strong></div>
+                <div className="flex justify-between"><span>الغيابات اليوم</span><strong>{overview.absent_today_count}</strong></div>
+                <div className="flex justify-between"><span>التسليمات المعتمدة</span><strong>{overview.validated_deliveries_count}</strong></div>
+              </div>
+            </Card>
+            <Card>
+              <p className="text-sm text-slate-500">التنبيهات السريعة</p>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="flex justify-between"><span>مراحل متأخرة</span><strong>{overview.delayed_phases_count}</strong></div>
+                <div className="flex justify-between"><span>مصاريف غير مصادق عليها</span><strong>{overview.pending_expenses_count}</strong></div>
+                <div className="flex justify-between"><span>الوثائق</span><strong>{overview.documents_count}</strong></div>
+                <div className="flex justify-between"><span>الهامش التقديري</span><strong>{formatMAD(overview.marge_estimee)}</strong></div>
+              </div>
+            </Card>
+          </div>
+
+          <Card>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <p className="text-xs text-slate-500">تاريخ البداية</p>
+                <p className="mt-1 font-semibold text-slate-900">{formatDate(overview.start_date)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">تاريخ النهاية المتوقع</p>
+                <p className="mt-1 font-semibold text-slate-900">{formatDate(overview.estimated_end_date)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">المدينة</p>
+                <p className="mt-1 font-semibold text-slate-900">{overview.city ?? overview.location}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">العنوان</p>
+                <p className="mt-1 font-semibold text-slate-900">{overview.address ?? "—"}</p>
+              </div>
+            </div>
+          </Card>
         </div>
-      )}
+      ) : null}
+
+      {activeTab === 1 ? (
+        <div className="grid gap-5 xl:grid-cols-2">
+          <Card>
+            <div className="mb-4 flex items-center gap-3">
+              <MapPinned size={18} className="text-primary-700" />
+              <h3 className="text-lg font-semibold">الأرض</h3>
+            </div>
+            {land ? (
+              <div className="grid gap-3 text-sm text-slate-700">
+                <div className="flex justify-between"><span>المساحة</span><strong>{land.surface_area_m2 ?? "—"} م²</strong></div>
+                <div className="flex justify-between"><span>العنوان</span><strong>{land.land_address ?? "—"}</strong></div>
+                <div className="flex justify-between"><span>الرسم العقاري</span><strong>{land.title_reference ?? "—"}</strong></div>
+                <div className="flex justify-between"><span>R+</span><strong>{land.floors_count ?? "—"}</strong></div>
+                <div className="flex justify-between"><span>قبو</span><strong>{land.has_basement ? "نعم" : "لا"}</strong></div>
+                <div className="flex justify-between"><span>نطاق العقد</span><strong>{CONTRACT_SCOPE_LABELS[land.contract_scope ?? ""] ?? "—"}</strong></div>
+                <div>
+                  <p className="text-slate-500">وثائق الأرض</p>
+                  <p className="mt-1 font-medium text-slate-900">{land.terrain_documents ?? "—"}</p>
+                </div>
+              </div>
+            ) : (
+              <EmptyState icon={MapPinned} title="ما كايناش بيانات الأرض" description="كمل معلومات الأرض باش يبقى المشروع منظم من البداية." />
+            )}
+          </Card>
+
+          <Card>
+            <div className="mb-4 flex items-center gap-3">
+              <Landmark size={18} className="text-primary-700" />
+              <h3 className="text-lg font-semibold">البنايات والبلوكات</h3>
+            </div>
+            <DataTable
+              data={buildings}
+              emptyMessage="ما كاين حتى بلوك مسجل."
+              columns={[
+                { header: "الاسم", accessor: "name" },
+                { header: "الطوابق", accessor: (row) => row.number_of_floors ?? "—" },
+                { header: "الشقق / اللوط", accessor: (row) => row.number_of_apartments ?? "—" },
+                { header: "المساحة", accessor: (row) => `${row.surface_area_m2 ?? "—"} م²` },
+              ]}
+            />
+          </Card>
+        </div>
+      ) : null}
+
+      {activeTab === 2 ? (
+        <DataTable
+          data={phases}
+          emptyMessage="ما كاين حتى مرحلة مسجلة."
+          columns={[
+            { header: "المرحلة", accessor: "name" },
+            { header: "الحالة", accessor: (row) => <StatusBadge status={row.status} label={PHASE_STATUS_LABELS[row.status]} /> },
+            {
+              header: "التقدم",
+              accessor: (row) => (
+                <div className="w-44">
+                  <div className="mb-1 text-xs">{formatPercent(row.progress_percentage)}</div>
+                  <ProgressBar value={row.progress_percentage} tone={row.is_delayed ? "red" : "blue"} />
+                </div>
+              ),
+            },
+            { header: "الميزانية", accessor: (row) => formatMAD(row.budget_planned) },
+            { header: "الكلفة", accessor: (row) => formatMAD(row.actual_cost) },
+            { header: "الآجال", accessor: (row) => (row.is_delayed ? "متأخرة" : "ضمن الآجال") },
+          ]}
+        />
+      ) : null}
+
+      {activeTab === 3 ? (
+        <DataTable
+          data={team}
+          emptyMessage="ما كاين حتى عضو معين لهذا الورش."
+          columns={[
+            { header: "الاسم", accessor: "employee_name" },
+            { header: "الدور", accessor: (row) => ASSIGNMENT_ROLE_LABELS[row.assignment_role] },
+            { header: "الأجرة اليومية", accessor: (row) => formatMAD(row.daily_salary) },
+            { header: "الساعات/اليوم", accessor: "work_hours_per_day" },
+            { header: "الحضور اليوم", accessor: (row) => (row.presence_today ? ATTENDANCE_STATUS_LABELS[row.presence_today] : "غير مسجل") },
+          ]}
+        />
+      ) : null}
+
+      {activeTab === 4 ? (
+        <div className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+          <Card>
+            <div className="mb-4 flex items-center gap-3">
+              <HardHat size={18} className="text-primary-700" />
+              <h3 className="text-lg font-semibold">Pointage اليوم</h3>
+            </div>
+            <div className="space-y-3">
+              {todayAttendance.length ? (
+                todayAttendance.map((row) => (
+                  <div key={row.id} className="rounded-2xl bg-slate-50 p-4 text-sm">
+                    <div className="flex justify-between">
+                      <span>المستخدم #{row.employee_id}</span>
+                      <strong>{ATTENDANCE_STATUS_LABELS[row.status]}</strong>
+                    </div>
+                    <p className="mt-2 text-slate-500">المهام: {row.tasks_completed ?? "—"}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">ما كاينش pointage اليوم.</p>
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <div className="mb-4 flex items-center gap-3">
+              <ScrollText size={18} className="text-primary-700" />
+              <h3 className="text-lg font-semibold">التقرير اليومي</h3>
+            </div>
+            {dailyReport ? (
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between"><span>التاريخ</span><strong>{formatDate(dailyReport.report_date)}</strong></div>
+                <div className="flex justify-between"><span>النقطة مكتملة</span><strong>{dailyReport.attendance_completed ? "نعم" : "لا"}</strong></div>
+                <div className="flex justify-between"><span>التسليمات</span><strong>{dailyReport.deliveries_received}</strong></div>
+                <div className="flex justify-between"><span>المصاريف</span><strong>{dailyReport.expenses_added}</strong></div>
+                <div>
+                  <p className="text-slate-500">الأشغال المنجزة</p>
+                  <p className="mt-1 font-medium text-slate-900">{dailyReport.completed_tasks ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">ملاحظة رئيس الورش</p>
+                  <p className="mt-1 font-medium text-slate-900">{dailyReport.supervisor_note ?? "—"}</p>
+                </div>
+              </div>
+            ) : (
+              <EmptyState icon={ScrollText} title="ما كاين حتى تقرير يومي" description="أنشئ التقرير اليومي باش يتجمع النشاط اليومي في مكان واحد." />
+            )}
+          </Card>
+        </div>
+      ) : null}
+
+      {activeTab === 5 ? (
+        <DataTable
+          data={expenses}
+          emptyMessage="ما كاين حتى مصروف."
+          columns={[
+            { header: "المصروف", accessor: "title" },
+            { header: "الفئة", accessor: (row) => EXPENSE_CATEGORY_LABELS[row.category] },
+            { header: "المبلغ", accessor: (row) => formatMAD(row.amount) },
+            { header: "التاريخ", accessor: (row) => formatDate(row.expense_date) },
+            { header: "الاعتماد", accessor: (row) => (row.is_validated ? "مصادق عليه" : "في الانتظار") },
+          ]}
+        />
+      ) : null}
+
+      {activeTab === 6 ? (
+        <DataTable
+          data={deliveries}
+          emptyMessage="ما كاين حتى تسليم مواد."
+          columns={[
+            { header: "التوريد", accessor: "title" },
+            { header: "المادة", accessor: "material_name" },
+            { header: "المورد", accessor: (row) => row.supplier?.name ?? "—" },
+            { header: "الكمية", accessor: (row) => `${row.quantity} ${row.unit}` },
+            { header: "المخزون", accessor: (row) => `${row.stock_quantity} ${row.unit}` },
+            { header: "الحالة", accessor: (row) => DELIVERY_STATUS_LABELS[row.status] },
+          ]}
+        />
+      ) : null}
+
+      {activeTab === 7 ? (
+        <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <Card>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between"><span>الإجمالي الخام</span><strong>{formatMAD(salarySummary?.gross_total)}</strong></div>
+              <div className="flex justify-between"><span>الساعات الإضافية</span><strong>{formatMAD(salarySummary?.overtime_total)}</strong></div>
+              <div className="flex justify-between"><span>السلف</span><strong>{formatMAD(salarySummary?.advances_total)}</strong></div>
+              <div className="flex justify-between"><span>الصافي</span><strong>{formatMAD(salarySummary?.net_total)}</strong></div>
+              <div className="flex justify-between"><span>المؤدى</span><strong>{formatMAD(salarySummary?.paid_total)}</strong></div>
+              <div className="flex justify-between"><span>الباقي</span><strong>{formatMAD(salarySummary?.remaining_total)}</strong></div>
+            </div>
+          </Card>
+          <DataTable
+            data={salarySummary?.salaries ?? []}
+            emptyMessage="ما كاين حتى حساب رواتب."
+            columns={[
+              { header: "الموظف", accessor: "employee_name" },
+              { header: "الأيام", accessor: "worked_days" },
+              { header: "الصافي", accessor: (row) => formatMAD(row.net_salary) },
+              { header: "المؤدى", accessor: (row) => formatMAD(row.paid_amount) },
+              { header: "الباقي", accessor: (row) => formatMAD(row.remaining_amount) },
+              { header: "الحالة", accessor: (row) => PAYMENT_STATUS_LABELS[row.payment_status] },
+            ]}
+          />
+        </div>
+      ) : null}
+
+      {activeTab === 8 ? (
+        <DataTable
+          data={documents}
+          emptyMessage="ما كاين حتى وثيقة."
+          columns={[
+            { header: "الملف", accessor: "file_name" },
+            { header: "النوع", accessor: (row) => RELATED_TYPE_LABELS[row.related_type] },
+            { header: "التاريخ", accessor: (row) => formatDate(row.created_at) },
+            {
+              header: "الرابط",
+              accessor: (row) => (
+                <a className="text-primary-700 underline" href={`${process.env.NEXT_PUBLIC_API_URL}${row.file_url}`}>
+                  فتح
+                </a>
+              ),
+            },
+          ]}
+        />
+      ) : null}
+
+      {activeTab === 9 ? (
+        <div className="grid gap-5 xl:grid-cols-2">
+          <Card>
+            <div className="mb-4 flex items-center gap-3">
+              <ReceiptText size={18} className="text-primary-700" />
+              <h3 className="text-lg font-semibold">تقرير مالي سريع</h3>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between"><span>الميزانية</span><strong>{formatMAD(financial?.budget_prevu)}</strong></div>
+              <div className="flex justify-between"><span>الكلفة الحقيقية</span><strong>{formatMAD(financial?.cout_reel)}</strong></div>
+              <div className="flex justify-between"><span>المشتريات المعتمدة</span><strong>{formatMAD(financial?.achats_valides_total)}</strong></div>
+              <div className="flex justify-between"><span>الرواتب</span><strong>{formatMAD(financial?.salaires_total)}</strong></div>
+              <div className="flex justify-between"><span>الهامش الحقيقي</span><strong>{formatMAD(financial?.marge_reelle)}</strong></div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="mb-4 flex items-center gap-3">
+              <FileImage size={18} className="text-primary-700" />
+              <h3 className="text-lg font-semibold">التقارير والوثائق</h3>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between"><span>آخر تقرير يومي</span><strong>{formatDate(dailyReport?.report_date)}</strong></div>
+              <div className="flex justify-between"><span>عدد الوثائق</span><strong>{documents.length}</strong></div>
+              <div className="flex justify-between"><span>عدد التسليمات</span><strong>{deliveries.length}</strong></div>
+              <div className="flex justify-between"><span>الملفات المالية الثقيلة</span><strong>{financial?.top_cost_items?.length ?? 0}</strong></div>
+            </div>
+          </Card>
+        </div>
+      ) : null}
     </AppShell>
   );
 }

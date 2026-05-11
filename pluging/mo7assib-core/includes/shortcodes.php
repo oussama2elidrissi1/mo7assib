@@ -20,7 +20,8 @@ class Mo7assib_Core_Shortcodes {
 	 * @return void
 	 */
 	public function register() {
-		add_shortcode( 'mo7assib_home', array( $this, 'render_home' ) );
+		add_shortcode( 'mo7assib_home',    array( $this, 'render_home' ) );
+		add_shortcode( 'mo7assib_landing', array( $this, 'render_landing' ) );
 	}
 
 	/**
@@ -162,6 +163,30 @@ class Mo7assib_Core_Shortcodes {
 				'status'   => __( 'Template plugin pilote la homepage', 'mo7assib-core' ),
 			),
 		);
+	}
+
+	/**
+	 * Rend la nouvelle landing page depuis son template.
+	 *
+	 * @return string
+	 */
+	public function render_landing() {
+		wp_enqueue_style( 'mo7assib-core-landing' );
+		wp_enqueue_script( 'mo7assib-core-landing' );
+
+		$template = MO7ASSIB_CORE_PATH . 'templates/landing.php';
+
+		if ( ! file_exists( $template ) ) {
+			return '<div class="mo7assib-home__debug">Mo7assib landing template manquant.</div>';
+		}
+
+		$GLOBALS['mo7assib_core_use_theme_chrome'] = true;
+		$GLOBALS['mo7assib_landing_context']        = 'shortcode';
+
+		ob_start();
+		include $template;
+
+		return (string) ob_get_clean();
 	}
 
 	/**

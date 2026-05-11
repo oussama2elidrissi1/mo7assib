@@ -17,6 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+
 define( 'MO7ASSIB_CORE_VERSION', '2.0.0' );
 define( 'MO7ASSIB_CORE_FILE', __FILE__ );
 define( 'MO7ASSIB_CORE_PATH', plugin_dir_path( __FILE__ ) );
@@ -86,6 +87,8 @@ final class Mo7assib_Core_Plugin {
 	 * @return void
 	 */
 	public function register_assets() {
+
+		// Assets — interface classique.
 		wp_register_style(
 			'mo7assib-core-app',
 			MO7ASSIB_CORE_URL . 'assets/css/app.css',
@@ -96,6 +99,22 @@ final class Mo7assib_Core_Plugin {
 		wp_register_script(
 			'mo7assib-core-app',
 			MO7ASSIB_CORE_URL . 'assets/js/app.js',
+			array(),
+			MO7ASSIB_CORE_VERSION,
+			true
+		);
+
+		// Assets — nouvelle landing page.
+		wp_register_style(
+			'mo7assib-core-landing',
+			MO7ASSIB_CORE_URL . 'assets/css/landing.css',
+			array(),
+			MO7ASSIB_CORE_VERSION
+		);
+
+		wp_register_script(
+			'mo7assib-core-landing',
+			MO7ASSIB_CORE_URL . 'assets/js/landing.js',
 			array(),
 			MO7ASSIB_CORE_VERSION,
 			true
@@ -115,8 +134,14 @@ final class Mo7assib_Core_Plugin {
 		);
 
 		if ( $this->should_replace_front_page() ) {
-			wp_enqueue_style( 'mo7assib-core-app' );
-			wp_enqueue_script( 'mo7assib-core-app' );
+			$template = $this->admin->get_homepage_template();
+			if ( 'landing' === $template ) {
+				wp_enqueue_style( 'mo7assib-core-landing' );
+				wp_enqueue_script( 'mo7assib-core-landing' );
+			} else {
+				wp_enqueue_style( 'mo7assib-core-app' );
+				wp_enqueue_script( 'mo7assib-core-app' );
+			}
 		}
 	}
 
@@ -131,6 +156,7 @@ final class Mo7assib_Core_Plugin {
 
 	/**
 	 * Remplace le template de homepage par celui du plugin.
+	 * Route vers la landing page ou l'interface classique selon le réglage admin.
 	 *
 	 * @param string $template Template detecte par WordPress.
 	 * @return string
@@ -140,14 +166,25 @@ final class Mo7assib_Core_Plugin {
 			return $template;
 		}
 
+		$GLOBALS['mo7assib_core_use_theme_chrome'] = $this->admin->use_theme_chrome();
+
+		$homepage_template = $this->admin->get_homepage_template();
+
+		if ( 'landing' === $homepage_template ) {
+			$GLOBALS['mo7assib_landing_context'] = 'landing-full';
+			$landing_path = MO7ASSIB_CORE_PATH . 'templates/landing.php';
+			if ( file_exists( $landing_path ) ) {
+				return $landing_path;
+			}
+		}
+
+		// Fallback : interface classique.
 		$GLOBALS['mo7assib_core_view_model'] = $this->shortcodes->get_home_view_model(
 			array(
 				'context' => 'full-homepage-replacement',
-				'debug'   => '1',
+				'debug'   => '0',
 			)
 		);
-
-		$GLOBALS['mo7assib_core_use_theme_chrome'] = $this->admin->use_theme_chrome();
 
 		return $this->shortcodes->get_home_template_path();
 	}

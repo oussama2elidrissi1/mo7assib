@@ -30,6 +30,9 @@ def check_in(db: Session, data: CheckInRequest) -> Attendance:
         check_in=data.check_in,
         status=AttendanceStatus.present,
         notes=data.notes,
+        supervisor_note=data.supervisor_note,
+        tasks_completed=data.tasks_completed,
+        photo_count=data.photo_count,
     )
     db.add(rec)
     db.commit()
@@ -48,6 +51,8 @@ def check_out(db: Session, attendance_id: int, data: CheckOutRequest) -> Attenda
         dt_out = datetime.combine(rec.date, data.check_out)
         delta = dt_out - dt_in
         rec.worked_hours = Decimal(str(round(delta.seconds / 3600, 2)))
+        standard_hours = Decimal("8")
+        rec.overtime_hours = rec.worked_hours - standard_hours if rec.worked_hours > standard_hours else Decimal("0")
     db.commit()
     db.refresh(rec)
     return rec

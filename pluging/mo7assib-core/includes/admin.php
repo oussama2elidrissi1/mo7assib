@@ -29,6 +29,14 @@ class Mo7assib_Core_Admin {
 	const OPTION_USE_THEME_CHROME = 'mo7assib_core_use_theme_chrome';
 
 	/**
+	 * Option de choix du template de homepage.
+	 * Valeurs : 'classic' (ancien home-interface.php) ou 'landing' (nouvelle landing page).
+	 *
+	 * @var string
+	 */
+	const OPTION_HOMEPAGE_TEMPLATE = 'mo7assib_core_homepage_template';
+
+	/**
 	 * Enregistre les hooks admin.
 	 *
 	 * @return void
@@ -61,6 +69,16 @@ class Mo7assib_Core_Admin {
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
 				'default'           => false,
+			)
+		);
+
+		register_setting(
+			'mo7assib_core_settings',
+			self::OPTION_HOMEPAGE_TEMPLATE,
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_homepage_template' ),
+				'default'           => 'landing',
 			)
 		);
 	}
@@ -131,6 +149,27 @@ class Mo7assib_Core_Admin {
 							<p class="description"><?php esc_html_e( 'Si active, le plugin garde get_header() et get_footer(). Sinon, il rend une homepage full screen autonome.', 'mo7assib-core' ); ?></p>
 						</td>
 					</tr>
+					<tr>
+						<th scope="row">
+							<label for="<?php echo esc_attr( self::OPTION_HOMEPAGE_TEMPLATE ); ?>">
+								<?php esc_html_e( 'Template de homepage', 'mo7assib-core' ); ?>
+							</label>
+						</th>
+						<td>
+							<select
+								id="<?php echo esc_attr( self::OPTION_HOMEPAGE_TEMPLATE ); ?>"
+								name="<?php echo esc_attr( self::OPTION_HOMEPAGE_TEMPLATE ); ?>"
+							>
+								<option value="landing" <?php selected( $this->get_homepage_template(), 'landing' ); ?>>
+									<?php esc_html_e( 'Nouvelle landing page (SaaS B2B)', 'mo7assib-core' ); ?>
+								</option>
+								<option value="classic" <?php selected( $this->get_homepage_template(), 'classic' ); ?>>
+									<?php esc_html_e( 'Interface classique (home-interface.php)', 'mo7assib-core' ); ?>
+								</option>
+							</select>
+							<p class="description"><?php esc_html_e( 'Choisissez quel template utiliser pour la homepage.', 'mo7assib-core' ); ?></p>
+						</td>
+					</tr>
 				</table>
 				<?php submit_button(); ?>
 			</form>
@@ -149,6 +188,16 @@ class Mo7assib_Core_Admin {
 	}
 
 	/**
+	 * Sanitise la valeur du template de homepage.
+	 *
+	 * @param mixed $value Valeur brute.
+	 * @return string
+	 */
+	public function sanitize_homepage_template( $value ) {
+		return in_array( $value, array( 'landing', 'classic' ), true ) ? $value : 'landing';
+	}
+
+	/**
 	 * Indique si le remplacement total est actif.
 	 *
 	 * @return bool
@@ -164,5 +213,14 @@ class Mo7assib_Core_Admin {
 	 */
 	public function use_theme_chrome() {
 		return (bool) get_option( self::OPTION_USE_THEME_CHROME, false );
+	}
+
+	/**
+	 * Retourne le template de homepage choisi.
+	 *
+	 * @return string 'landing' ou 'classic'
+	 */
+	public function get_homepage_template() {
+		return (string) get_option( self::OPTION_HOMEPAGE_TEMPLATE, 'landing' );
 	}
 }

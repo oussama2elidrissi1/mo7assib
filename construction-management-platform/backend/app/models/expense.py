@@ -1,4 +1,5 @@
 import enum
+import sqlalchemy as sa
 from sqlalchemy import Column, Integer, String, Enum, Date, Numeric, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.db.base import Base, TimestampMixin
@@ -33,6 +34,8 @@ class Expense(Base, TimestampMixin):
     payment_method = Column(Enum(PaymentMethod), nullable=False, default=PaymentMethod.cash)
     supplier_name = Column(String(255))
     receipt_file_url = Column(String(512))
+    is_validated = Column(sa.Boolean, nullable=False, default=False)
+    validated_by = Column(Integer, ForeignKey("users.id"))
     notes = Column(Text)
 
     project = relationship("Project", back_populates="expenses")

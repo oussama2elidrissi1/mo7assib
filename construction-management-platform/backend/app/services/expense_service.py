@@ -17,19 +17,24 @@ def get_expense(db: Session, expense_id: int) -> Expense:
     return e
 
 
-def create_expense(db: Session, data: ExpenseCreate) -> Expense:
+def create_expense(db: Session, data: ExpenseCreate, validated_by: int | None = None) -> Expense:
     get_project(db, data.project_id)
-    e = Expense(**data.model_dump())
+    payload = data.model_dump()
+    if payload.get("is_validated"):
+        payload["validated_by"] = validated_by
+    e = Expense(**payload)
     db.add(e)
     db.commit()
     db.refresh(e)
     return e
 
 
-def update_expense(db: Session, expense_id: int, data: ExpenseUpdate) -> Expense:
+def update_expense(db: Session, expense_id: int, data: ExpenseUpdate, validated_by: int | None = None) -> Expense:
     e = get_expense(db, expense_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(e, field, value)
+    if data.is_validated is True:
+        e.validated_by = validated_by
     db.commit()
     db.refresh(e)
     return e

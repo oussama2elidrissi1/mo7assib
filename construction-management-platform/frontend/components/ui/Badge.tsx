@@ -1,4 +1,5 @@
 import clsx from "clsx";
+export { statusVariant } from "@/lib/types";
 
 type Variant = "green" | "blue" | "yellow" | "red" | "gray" | "orange";
 
@@ -12,18 +13,5 @@ const variants: Record<Variant, string> = {
 };
 
 export function Badge({ label, variant = "gray" }: { label: string; variant?: Variant }) {
-  return (
-    <span className={clsx("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", variants[variant])}>
-      {label}
-    </span>
-  );
-}
-
-export function statusVariant(status: string): Variant {
-  const map: Record<string, Variant> = {
-    active: "green", planned: "blue", paused: "yellow", finished: "gray", cancelled: "red",
-    todo: "gray", in_progress: "blue", done: "green", blocked: "red",
-    present: "green", absent: "red", half_day: "yellow",
-  };
-  return map[status] ?? "gray";
+  return <span className={clsx("inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold", variants[variant])}>{label}</span>;
 }

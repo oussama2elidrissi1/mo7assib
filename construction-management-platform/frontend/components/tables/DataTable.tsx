@@ -9,30 +9,36 @@ interface Props<T> {
   emptyMessage?: string;
 }
 
-export default function DataTable<T extends { id: number }>({ columns, data, emptyMessage = "Aucun résultat." }: Props<T>) {
+export default function DataTable<T extends { id: number }>({
+  columns,
+  data,
+  emptyMessage = "لا توجد نتائج.",
+}: Props<T>) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
-        <thead className="bg-gray-50">
+    <div className="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_24px_50px_-40px_rgba(6,26,51,0.4)]">
+      <table className="min-w-full divide-y divide-slate-200 text-sm">
+        <thead className="bg-slate-50/90">
           <tr>
-            {columns.map((col, i) => (
-              <th key={i} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            {columns.map((col, index) => (
+              <th key={index} className="px-4 py-3 text-right text-xs font-semibold tracking-wide text-slate-500">
                 {col.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-100">
+        <tbody className="divide-y divide-slate-100 bg-white">
           {data.length === 0 ? (
-            <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-gray-400">{emptyMessage}</td></tr>
+            <tr>
+              <td colSpan={columns.length} className="px-4 py-10 text-center text-slate-400">
+                {emptyMessage}
+              </td>
+            </tr>
           ) : (
             data.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                {columns.map((col, i) => (
-                  <td key={i} className="px-4 py-3">
-                    {typeof col.accessor === "function"
-                      ? col.accessor(row)
-                      : String(row[col.accessor] ?? "")}
+              <tr key={row.id} className="transition-colors hover:bg-slate-50/80">
+                {columns.map((col, index) => (
+                  <td key={index} className="px-4 py-4 align-top text-right text-slate-700">
+                    {typeof col.accessor === "function" ? col.accessor(row) : String(row[col.accessor] ?? "—")}
                   </td>
                 ))}
               </tr>

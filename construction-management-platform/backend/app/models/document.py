@@ -9,6 +9,12 @@ class RelatedType(str, enum.Enum):
     land = "land"
     resource = "resource"
     expense = "expense"
+    contract = "contract"
+    plan = "plan"
+    invoice = "invoice"
+    delivery_note = "delivery_note"
+    site_photo = "site_photo"
+    authorization = "authorization"
 
 
 class Document(Base, TimestampMixin):

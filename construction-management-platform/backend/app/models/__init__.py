@@ -8,3 +8,14 @@ from app.models.task import Task
 from app.models.resource import Resource
 from app.models.expense import Expense
 from app.models.document import Document
+from app.models.advance import Advance
+from app.models.salary import SalaryCalculation
+from app.models.project_cycle import (
+    DailySiteReport,
+    MaterialDelivery,
+    ProjectAssignment,
+    ProjectBudget,
+    ProjectPhase,
+    SalaryPayment,
+    Supplier,
+)

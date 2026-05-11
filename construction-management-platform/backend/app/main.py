@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.api.routes import (
     auth, users, projects, buildings, employees,
     attendance, tasks, resources, expenses, documents, dashboard,
+    advances, salaries,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -40,6 +41,8 @@ app.include_router(resources.router)
 app.include_router(expenses.router)
 app.include_router(documents.router)
 app.include_router(dashboard.router)
+app.include_router(advances.router)
+app.include_router(salaries.router)
 
 
 @app.get("/health")

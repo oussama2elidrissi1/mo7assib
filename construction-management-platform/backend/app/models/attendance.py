@@ -23,8 +23,12 @@ class Attendance(Base, TimestampMixin):
     check_in = Column(Time)
     check_out = Column(Time)
     worked_hours = Column(Numeric(5, 2))
+    overtime_hours = Column(Numeric(5, 2), default=0)
     status = Column(Enum(AttendanceStatus), nullable=False, default=AttendanceStatus.present)
     notes = Column(Text)
+    supervisor_note = Column(Text)
+    tasks_completed = Column(Text)
+    photo_count = Column(Integer, nullable=False, default=0)
 
     employee = relationship("Employee", back_populates="attendance")
     project = relationship("Project", back_populates="attendance")

@@ -2,11 +2,16 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate, EmployeeResponse
-from app.services.employee_service import create_employee, get_employee, update_employee, delete_employee, get_employees
+from app.services.employee_service import create_employee, get_employee, update_employee, delete_employee, get_employees, get_all_employees
 from app.api.deps import get_current_user, require_not_viewer
 from app.models.user import User
 
 router = APIRouter(prefix="/employees", tags=["employees"])
+
+
+@router.get("", response_model=list[EmployeeResponse])
+def list_all(skip: int = 0, limit: int = 200, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    return get_all_employees(db, skip=skip, limit=limit)
 
 
 @router.post("", response_model=EmployeeResponse, status_code=201)

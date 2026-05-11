@@ -1,60 +1,94 @@
 "use client";
-import { useEffect, useState } from "react";
-import AppShell from "@/components/layout/AppShell";
-import Button from "@/components/ui/Button";
-import { Badge, statusVariant } from "@/components/ui/Badge";
-import { PROJECT_STATUS_LABELS } from "@/lib/types";
-import type { Project } from "@/lib/types";
-import api from "@/lib/api";
+
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Plus, Search } from "lucide-react";
+
+import AppShell from "@/components/layout/AppShell";
+import PageHeader from "@/components/ui/PageHeader";
+import ProjectCard from "@/components/ui/ProjectCard";
+import EmptyState from "@/components/ui/EmptyState";
+import { Card } from "@/components/ui/Card";
+import api from "@/lib/api";
+import { DashboardProjectCard, ProjectOverview } from "@/lib/types";
+
+const scopeDescriptions: Record<string, string> = {
+  all: "عرض جميع المشاريع",
+  active: "عرض المشاريع النشطة",
+  delayed: "عرض المشاريع المتأخرة",
+  closed: "عرض المشاريع المغلقة",
+};
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const params = useSearchParams();
+  const scope = params.get("scope") ?? "all";
+  const [projects, setProjects] = useState<ProjectOverview[]>([]);
 
-  useEffect(() => { api.get("/projects").then((r) => setProjects(r.data)); }, []);
+  useEffect(() => {
+    api.get("/projects").then(async (response) => {
+      const rows = response.data as { id: number }[];
+      const details = await Promise.all(rows.map((row) => api.get(`/projects/${row.id}/overview`).then((res) => res.data)));
+      setProjects(details);
+    }).catch(() => {});
+  }, []);
 
-  const fmt = (n?: number) => n
-    ? new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(n)
-    : "—";
+  const filtered = useMemo(() => {
+    if (scope === "active") return projects.filter((project) => project.status === "active");
+    if (scope === "closed") return projects.filter((project) => ["finished", "archived"].includes(project.status));
+    if (scope === "delayed") return projects.filter((project) => project.alerts.some((alert) => alert.code === "phase_delayed"));
+    return projects;
+  }, [projects, scope]);
+
+  const cards: DashboardProjectCard[] = filtered.map((project) => ({
+    id: project.id,
+    name: project.name,
+    city: project.city,
+    status: project.status,
+    progress: project.taux_avancement,
+    budget_prevu: project.budget_prevu,
+    cout_reel: project.cout_reel,
+    marge_estimee: project.marge_estimee,
+    prochaine_phase: project.prochaine_phase,
+    chef_chantier: project.chef_chantier,
+  }));
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Chantiers</h1>
-          <p className="text-gray-500 text-sm">{projects.length} projet(s)</p>
-        </div>
-        <Link href="/projects/new">
-          <Button><Plus size={16} className="mr-2" />Nouveau chantier</Button>
-        </Link>
-      </div>
+      <PageHeader
+        eyebrow="المشاريع"
+        title="محفظة المشاريع"
+        description="هنا كتلقى كل الأوراش بتصنيف واضح حسب الحالة، التأخير، والجاهزية المالية."
+        actions={[{ href: "/projects/new", label: "إنشاء مشروع" }]}
+      />
 
-      <div className="grid gap-4">
-        {projects.map((p) => (
-          <Link key={p.id} href={`/projects/${p.id}`}>
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{p.name}</h3>
-                  <p className="text-sm text-gray-500">{p.location} — {p.address || ""}</p>
-                </div>
-                <Badge label={PROJECT_STATUS_LABELS[p.status]} variant={statusVariant(p.status)} />
-              </div>
-              <div className="flex gap-6 mt-3 text-sm text-gray-600">
-                <span>Prix convenu: <strong>{fmt(p.agreed_price)}</strong></span>
-                {p.start_date && <span>Début: {p.start_date}</span>}
-                {p.estimated_end_date && <span>Fin estimée: {p.estimated_end_date}</span>}
-              </div>
-            </div>
-          </Link>
-        ))}
-        {projects.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
-            <p>Aucun chantier. Créez votre premier projet.</p>
-          </div>
-        )}
-      </div>
+      <Card className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary-50 text-primary-700">
+          <Search size={18} />
+        </div>
+        <div>
+          <p className="font-semibold text-slate-900">الفلاتر الجاهزة</p>
+          <p className="text-sm text-slate-500">{scopeDescriptions[scope] ?? scopeDescriptions.all}</p>
+        </div>
+        <Link href="/projects/new" className="mr-auto">
+          <span className="inline-flex items-center gap-2 rounded-2xl bg-primary-900 px-4 py-2 text-sm font-semibold text-white">
+            <Plus size={16} />
+            مشروع جديد
+          </span>
+        </Link>
+      </Card>
+
+      {cards.length ? (
+        <div className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
+          {cards.map((project) => <ProjectCard key={project.id} project={project} />)}
+        </div>
+      ) : (
+        <EmptyState
+          icon={Search}
+          title="ما كاين حتى مشروع مطابق"
+          description="بدل الفلتر أو أنشئ مشروع جديد باش تبدأ تدبير دورة حياة الورش."
+        />
+      )}
     </AppShell>
   );
 }
