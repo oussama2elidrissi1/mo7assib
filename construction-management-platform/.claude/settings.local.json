@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\oussa\\\\mo7assib-back\\\\construction-management-platform\" -Force)",
-      "Bash(Select-Object Name, FullName)"
-    ]
-  }
-}

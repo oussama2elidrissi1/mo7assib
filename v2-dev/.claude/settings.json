@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(curl -s http://localhost:8000/docs -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -X POST http://localhost:8000/auth/login -H \"Content-Type: application/x-www-form-urlencoded\" -d \"username=admin@example.com&password=password123\")",
+      "Bash(curl -s -X POST http://localhost:8000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"admin@example.com\",\"password\":\"password123\"}')",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzc3OTcxMTQ0fQ.eKZBvMparEo5GD7D_Dj_kDf9LKWOQNZUhXeqgL3PWso' http://localhost:8000/projects)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(f'  {k}: {v}'\\) for k,v in data.items\\(\\)]\")",
+      "Bash(2>&1)",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzc3OTcxMTQ0fQ.eKZBvMparEo5GD7D_Dj_kDf9LKWOQNZUhXeqgL3PWso' http://localhost:8000/employees)",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzc3OTcxMTQ0fQ.eKZBvMparEo5GD7D_Dj_kDf9LKWOQNZUhXeqgL3PWso' http://localhost:8000/advances)",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzc3OTcxMTQ0fQ.eKZBvMparEo5GD7D_Dj_kDf9LKWOQNZUhXeqgL3PWso' http://localhost:8000/dashboard)",
+      "Bash(curl -s http://localhost:8000/openapi.json)"
+    ]
+  }
+}
