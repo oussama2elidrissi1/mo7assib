@@ -1,7 +1,5 @@
 /.phpunit.cache
-/node_modules
-/v2-backup/frontend/node_modules
-/v2-dev/frontend/node_modules
+**/node_modules
 /public/build
 /public/hot
 /public/storage
@@ -20,3 +18,4 @@ yarn-error.log
 /.idea
 /.vscode
 /venv
+**/.next/
