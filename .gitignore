@@ -19,3 +19,4 @@ yarn-error.log
 /.vscode
 /venv
 **/.next/
+**/__pycache__/
