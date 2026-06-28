@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+build/
+
+# Local env (real overrides for dev — must NEVER be committed)
+.env*.local
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

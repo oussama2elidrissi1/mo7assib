@@ -1,0 +1,20 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Sibling dev project (not part of this repo)
+../v2-dev/
+
+# Python (also covered in backend/.gitignore, kept here as a safety net)
+__pycache__/
+*.pyc
+*.pyo
+
+# Node (also covered in frontend/.gitignore)
+node_modules/

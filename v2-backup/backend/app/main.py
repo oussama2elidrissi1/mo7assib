@@ -48,3 +48,7 @@ app.include_router(salaries.router)
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.get("/")
+def root():
+    return {"status": "API running"}
