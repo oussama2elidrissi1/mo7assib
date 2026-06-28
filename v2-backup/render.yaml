@@ -1,0 +1,41 @@
+databases:
+  - name: mo7assib-db
+    region: frankfurt
+    plan: starter
+    databaseName: construction_db
+    databaseUser: mo7assib
+    ipAllowList: []  # Only allow internal Render access
+
+services:
+  - type: web
+    name: mo7assib-api
+    runtime: docker
+    rootDir: backend
+    region: frankfurt
+    plan: starter
+    healthCheckPath: /health
+    # Run migrations + seed before uvicorn; rewrite DATABASE_URL scheme.
+    startCommand: sh ./start.sh
+    dockerfilePath: ./Dockerfile
+    # Persistent disk for file uploads (1 GB for staging).
+    disk:
+      name: uploads
+      mountPath: /app/uploads
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mo7assib-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true  # Render generates a strong random secret
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: UPLOAD_DIR
+        value: uploads
+      # FRONTEND_URL is set manually after Vercel deploy (to the exact assigned URL).
+      - key: FRONTEND_URL
+        value: https://placeholder.vercel.app
+        sync: false
